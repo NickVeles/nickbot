@@ -15,7 +15,7 @@
     "typescript"
   ],
   "author": "Nick Veles",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "type": "module",
   "dependencies": {
     "discord.js": "^14.22.1"
