@@ -1,5 +1,3 @@
-
-
 import { REST, Routes } from "discord.js";
 import { commands } from "./commands";
 import dotenv from "dotenv";
@@ -31,5 +29,3 @@ export async function deployCommands({ guildId }: DeployCommandsProps) {
     console.error(error);
   }
 }
-
-

@@ -1,8 +1,7 @@
-import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
+import { Client, Events, GatewayIntentBits } from "discord.js";
 import dotenv from "dotenv";
 
 // Command imports
-import pingCommand from "./commands/utility/ping.js";
 import { deployCommands } from "./deploy-commands.js";
 import { commands } from "./commands/index.js";
 
