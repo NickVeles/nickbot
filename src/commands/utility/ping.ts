@@ -6,6 +6,6 @@ export const data = new SlashCommandBuilder()
   .setDescription("Replies with Pong!");
 
 // Execute
-export const execute = async (interaction: CommandInteraction) => {
+export async function execute(interaction: CommandInteraction) {
   await interaction.reply("Pong!");
-};
+}
