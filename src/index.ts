@@ -9,13 +9,15 @@ import { commands } from "./commands/index.js";
 dotenv.config();
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+});
 
 // Ready event
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user.tag} 🤖`);
   console.log(`Available commands: ${Object.keys(commands).join(", ")}`);
-  
+
   // Re-sync commands for every guild the bot is already in
   for (const [guildId] of client.guilds.cache) {
     await deployCommands({ guildId });
