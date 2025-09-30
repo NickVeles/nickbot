@@ -15,7 +15,7 @@ export const data = new SlashCommandBuilder()
       .setDescription("The role to count members for")
       .setRequired(false)
   )
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles);
+  .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers); // mod required
 
 // Execute
 export async function execute(interaction: ChatInputCommandInteraction) {
