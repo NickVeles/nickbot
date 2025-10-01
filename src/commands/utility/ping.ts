@@ -8,7 +8,7 @@ import {
 // Command
 export const data = new SlashCommandBuilder()
   .setName("ping")
-  .setDescription("Replies with Pong!")
+  .setDescription("Replies with Pong! and latency info")
   .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers); // mod required
 
 // Execute
