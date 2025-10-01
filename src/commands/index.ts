@@ -9,7 +9,10 @@ import * as banner from "./utility/banner";
 import * as userinfo from "./utility/userinfo";
 import * as serverinfo from "./utility/serverinfo";
 
+import * as purge from "./moderation/purge";
+
 export const commands: Record<string, Command> = {
+  // Utility
   help,
   ping,
   rolecount,
@@ -17,4 +20,7 @@ export const commands: Record<string, Command> = {
   banner,
   userinfo,
   serverinfo,
+
+  // Moderation
+  purge,
 };
