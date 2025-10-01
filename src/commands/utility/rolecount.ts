@@ -3,6 +3,7 @@ import {
   ChatInputCommandInteraction,
   PermissionFlagsBits,
   Role,
+  MessageFlags,
 } from "discord.js";
 
 // Command
@@ -119,7 +120,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     if (interaction.deferred) {
       await interaction.editReply(errorMessage);
     } else {
-      await interaction.reply({ ...errorMessage, ephemeral: true });
+      await interaction.reply({
+        ...errorMessage,
+        flags: MessageFlags.Ephemeral,
+      });
     }
   }
 }
