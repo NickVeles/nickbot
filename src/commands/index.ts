@@ -14,6 +14,7 @@ import * as purge from "./moderation/purge";
 
 import * as _8ball from "./games/8ball";
 import * as roll from "./games/roll";
+import * as welcome from "./utility/welcome";
 
 export const commands: Record<string, Command> = {
   // Utility
@@ -25,6 +26,7 @@ export const commands: Record<string, Command> = {
   banner,
   userinfo,
   serverinfo,
+  welcome,
 
   // Moderation
   purge,
