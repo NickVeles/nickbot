@@ -6,6 +6,7 @@ import * as ping from "./utility/ping";
 import * as rolecount from "./utility/rolecount";
 import * as avatar from "./utility/avatar";
 import * as banner from "./utility/banner";
+import * as userinfo from "./utility/userinfo";
 
 export const commands: Record<string, Command> = {
   help,
@@ -13,4 +14,5 @@ export const commands: Record<string, Command> = {
   rolecount,
   avatar,
   banner,
+  userinfo,
 };
