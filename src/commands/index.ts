@@ -9,12 +9,13 @@ import * as avatar from "./utility/avatar";
 import * as banner from "./utility/banner";
 import * as userinfo from "./utility/userinfo";
 import * as serverinfo from "./utility/serverinfo";
+import * as welcome from "./utility/welcome";
+import * as author from "./utility/author";
 
 import * as purge from "./moderation/purge";
 
 import * as _8ball from "./games/8ball";
 import * as roll from "./games/roll";
-import * as welcome from "./utility/welcome";
 
 export const commands: Record<string, Command> = {
   // Utility
@@ -27,6 +28,7 @@ export const commands: Record<string, Command> = {
   userinfo,
   serverinfo,
   welcome,
+  author,
 
   // Moderation
   purge,
