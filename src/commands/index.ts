@@ -11,6 +11,7 @@ import * as userinfo from "./utility/userinfo";
 import * as serverinfo from "./utility/serverinfo";
 
 import * as purge from "./moderation/purge";
+import * as _8ball from "./games/8ball";
 
 export const commands: Record<string, Command> = {
   // Utility
@@ -25,4 +26,7 @@ export const commands: Record<string, Command> = {
 
   // Moderation
   purge,
+
+  // Games
+  "8ball": _8ball,
 };
