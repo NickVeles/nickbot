@@ -11,7 +11,9 @@ import * as userinfo from "./utility/userinfo";
 import * as serverinfo from "./utility/serverinfo";
 
 import * as purge from "./moderation/purge";
+
 import * as _8ball from "./games/8ball";
+import * as roll from "./games/roll";
 
 export const commands: Record<string, Command> = {
   // Utility
@@ -29,4 +31,5 @@ export const commands: Record<string, Command> = {
 
   // Games
   "8ball": _8ball,
+  roll,
 };
