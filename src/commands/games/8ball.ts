@@ -43,6 +43,7 @@ const responses = [
   { text: "Lmao no", color: 0xff0000 },
   { text: "Yeah, that's gonna be a no from me, chief", color: 0xff0000 },
   { text: "Yes, definitely /s", color: 0xff0000 },
+  { text: "um... 💀", color: 0xff0000 },
   { text: randomIPv4(), color: 0xff0000 },
 ];
 
