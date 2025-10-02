@@ -7,7 +7,7 @@ import {
 
 const authorConfig = {
   name: "Nick Veles",
-  avatar: "https://github.com/nickveles.png", // Replace with actual image URL
+  avatar: "https://github.com/nickveles.png",
   website: "https://nickveles.com",
   form: "https://nickveles.com/contact",
   github: "https://github.com/nickveles",
@@ -25,7 +25,7 @@ const authorConfig = {
 export const data = new SlashCommandBuilder()
   .setName("author")
   .setDescription("Learn about the bot's creator")
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator); // admmin required
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator); // admin required
 
 // Execute
 export async function execute(interaction: ChatInputCommandInteraction) {
