@@ -13,6 +13,7 @@ import * as welcome from "./utility/welcome";
 import * as author from "./utility/author";
 
 import * as purge from "./moderation/purge";
+import * as clear from "./moderation/clear";
 
 import * as _8ball from "./games/8ball";
 import * as roll from "./games/roll";
@@ -32,6 +33,7 @@ export const commands: Record<string, Command> = {
 
   // Moderation
   purge,
+  clear,
 
   // Games
   "8ball": _8ball,
