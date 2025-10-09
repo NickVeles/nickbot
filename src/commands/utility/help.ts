@@ -34,13 +34,15 @@ export async function execute(interaction: CommandInteraction) {
       .setTimestamp();
 
     // Add each command as a field
-    commands.forEach((cmd) => {
-      embed.addFields({
-        name: `\`/${cmd.name}\``,
-        value: cmd.description || "No description provided",
-        inline: false,
+    commands
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach((cmd) => {
+        embed.addFields({
+          name: `\`/${cmd.name}\``,
+          value: cmd.description || "No description provided",
+          inline: false,
+        });
       });
-    });
 
     // Reply with the embed
     await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
