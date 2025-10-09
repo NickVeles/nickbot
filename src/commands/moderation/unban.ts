@@ -40,16 +40,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Fetch the ban list
     const bans = await interaction.guild!.bans.fetch();
 
-    // Try to find the banned user by ID or username
-    let bannedUser = bans.find((ban) => ban.user.id === userInput);
+    // Try to find the user in the ban list
+    const bannedUser = bans.find((ban) => {
+      const normalizedInput = userInput.toLowerCase();
+      const mention = `<@${ban.user.id}>`;
+      const id = ban.user.id;
+      const username = ban.user.username.toLowerCase();
+      const tag = ban.user.tag.toLowerCase();
 
-    if (!bannedUser) {
-      bannedUser = bans.find(
-        (ban) =>
-          ban.user.username.toLowerCase() === userInput.toLowerCase() ||
-          ban.user.tag.toLowerCase() === userInput.toLowerCase()
+      return (
+        userInput === mention ||
+        userInput === id ||
+        normalizedInput === username ||
+        normalizedInput === tag
       );
-    }
+    });
 
     // If user not found in ban list
     if (!bannedUser) {
