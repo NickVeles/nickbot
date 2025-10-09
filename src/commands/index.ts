@@ -14,6 +14,9 @@ import * as author from "./utility/author";
 
 import * as purge from "./moderation/purge";
 import * as clear from "./moderation/clear";
+import * as ban from "./moderation/ban";
+import * as unban from "./moderation/unban";
+import * as kick from "./moderation/kick";
 
 import * as _8ball from "./games/8ball";
 import * as roll from "./games/roll";
@@ -34,6 +37,9 @@ export const commands: Record<string, Command> = {
   // Moderation
   purge,
   clear,
+  ban,
+  unban,
+  kick,
 
   // Games
   "8ball": _8ball,
