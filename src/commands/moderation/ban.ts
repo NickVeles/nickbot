@@ -88,12 +88,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             name: "🔥 Messages Purged",
             value: purge ? "- Yes (last 7 days)" : "- No",
             inline: false,
+          },
+          {
+            name: "👑 Owner",
+            value: `- <@${interaction.guild!.ownerId}>`,
+            inline: false,
           }
         )
         .setFooter({
-          text: `If you believe this is a mistake, please contact the server administrators \~ owner: <@${
-            interaction.guild!.ownerId
-          }>`,
+          text: `If you believe this is a mistake, please contact the server administrators.`,
         })
         .setTimestamp();
 

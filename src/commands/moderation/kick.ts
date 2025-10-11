@@ -84,15 +84,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             interaction.guild!.name
           }**`
         )
-        .addFields({
-          name: "❓ Reason",
-          value: reason ? `- ${reason}` : "- No reason provided",
-          inline: false,
-        })
+        .addFields(
+          {
+            name: "❓ Reason",
+            value: reason ? `- ${reason}` : "- No reason provided",
+            inline: false,
+          },
+          {
+            name: "👑 Owner",
+            value: `- <@${interaction.guild!.ownerId}>`,
+            inline: false,
+          }
+        )
         .setFooter({
-          text: `You can rejoin the server if it is public. If you believe this is a mistake, please contact the server administrators \~ owner: <@${
-            interaction.guild!.ownerId
-          }>`,
+          text: `If you believe this is a mistake, please contact the server administrators.`,
         })
         .setTimestamp();
 
