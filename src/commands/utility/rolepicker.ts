@@ -9,9 +9,10 @@ import {
   MessageFlags,
   EmbedBuilder
 } from 'discord.js';
+import Database from '@replit/database';
 
 // Use Replit Database
-const db = new (require('@replit/database'))();
+const db = new Database();
 
 interface PickerConfig {
   id: string;
@@ -23,7 +24,11 @@ interface PickerConfig {
 // Load picker from database
 async function loadPicker(pickerId: string): Promise<PickerConfig | null> {
   try {
-    return await db.get(`picker_${pickerId}`);
+    const result = await db.get(`picker_${pickerId}`);
+    if (result && 'value' in result) {
+      return result.value as PickerConfig;
+    }
+    return null;
   } catch (err) {
     return null;
   }
