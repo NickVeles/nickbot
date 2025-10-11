@@ -92,9 +92,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  // Create select menu with a persistent custom ID that includes role info
+  // Create select menu with FIXED custom ID (not timestamp-based)
+  // Format: role_select_{single|multi}_{roleIds}
   const roleData = roles.map(r => r.id).join(',');
-  const customId = `role_select_${multiple ? 'multi' : 'single'}_${Date.now()}`;
+  const customId = `role_select_${multiple ? 'multi' : 'single'}_${roleData}`;
   
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId(customId)
@@ -140,31 +141,46 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     embeds: [embed],
     components: [row]
   });
+}
 
-  // Create collector for the select menu
-  const message = await interaction.fetchReply();
-  const collector = message.createMessageComponentCollector({
-    componentType: ComponentType.StringSelect,
-    filter: (i) => i.customId === customId,
-    time: 0 // No timeout, works indefinitely
-  });
+// Interaction handler for role picker
+export function registerRolePickerHandler(client: any) {
+  client.on('interactionCreate', async (interaction: StringSelectMenuInteraction) => {
+    // Check if this is a role picker interaction
+    if (!interaction.isStringSelectMenu()) return;
+    if (!interaction.customId.startsWith('role_select_')) return;
 
-  collector?.on('collect', async (selectInteraction: StringSelectMenuInteraction) => {
-    if (!selectInteraction.guild || !selectInteraction.member) return;
+    if (!interaction.guild || !interaction.member) return;
 
-    // CRITICAL: Defer within 3 seconds of the NEW interaction
+    // Parse the custom ID to get role data
+    const parts = interaction.customId.split('_');
+    const mode = parts[2]; // 'single' or 'multi'
+    const roleIds = interaction.customId.slice('role_select_'.length + mode.length + 1).split(',');
+
+    // CRITICAL: Defer within 3 seconds of the interaction
     try {
-      await selectInteraction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     } catch (err) {
       console.error('Failed to defer interaction:', err);
       return;
     }
 
     try {
-      const member = await selectInteraction.guild.members.fetch(selectInteraction.user.id);
-      const selectedRoleIds = selectInteraction.values;
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+      const selectedRoleIds = interaction.values;
+      const roles: Role[] = [];
 
-      if (!multiple) {
+      // Fetch all the roles
+      for (const roleId of roleIds) {
+        try {
+          const role = await interaction.guild.roles.fetch(roleId);
+          if (role) roles.push(role);
+        } catch (err) {
+          // Role doesn't exist anymore
+        }
+      }
+
+      if (mode === 'single') {
         // Single selection mode: remove all picker roles, add selected one
         const rolesToRemove = roles.filter(r => 
           member.roles.cache.has(r.id) && !selectedRoleIds.includes(r.id)
@@ -175,7 +191,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
       }
 
-      // Add selected roles
+      // Add/remove selected roles
       const addedRoles: string[] = [];
       const removedRoles: string[] = [];
 
@@ -186,7 +202,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         if (shouldHave && !hasRole) {
           await member.roles.add(role);
           addedRoles.push(role.name);
-        } else if (!shouldHave && hasRole && multiple) {
+        } else if (!shouldHave && hasRole && mode === 'multi') {
           // In multiple mode, deselecting removes the role
           await member.roles.remove(role);
           removedRoles.push(role.name);
@@ -204,11 +220,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         response = 'No changes made to your roles.';
       }
 
-      await selectInteraction.editReply({ content: response });
+      await interaction.editReply({ content: response });
     } catch (err) {
       console.error('Error managing roles:', err);
       try {
-        await selectInteraction.editReply({
+        await interaction.editReply({
           content: 'An error occurred while managing your roles. Make sure I have the proper permissions.'
         });
       } catch (replyErr) {

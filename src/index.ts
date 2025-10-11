@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import { deployCommands } from "./deploy-commands.js";
 import { commands } from "./commands/index.js";
 
+import { registerRolePickerHandler } from "./commands/utility/rolepicker.js";
+
 // Load environment variables from .env file
 dotenv.config();
 
@@ -22,6 +24,9 @@ client.once(Events.ClientReady, async (readyClient) => {
   for (const [guildId] of client.guilds.cache) {
     await deployCommands({ guildId });
   }
+
+  // Register persistent interaction handlers
+  registerRolePickerHandler(client);
 });
 
 // Guild Create
