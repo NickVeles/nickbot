@@ -5,11 +5,34 @@ import {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
-  ComponentType,
   Role,
   MessageFlags,
   EmbedBuilder
 } from 'discord.js';
+
+// Use Replit Database
+const db = new (require('@replit/database'))();
+
+interface PickerConfig {
+  id: string;
+  guildId: string;
+  roleIds: string[];
+  multiple: boolean;
+}
+
+// Load picker from database
+async function loadPicker(pickerId: string): Promise<PickerConfig | null> {
+  try {
+    return await db.get(`picker_${pickerId}`);
+  } catch (err) {
+    return null;
+  }
+}
+
+// Save picker to database
+async function savePicker(pickerConfig: PickerConfig) {
+  await db.set(`picker_${pickerConfig.id}`, pickerConfig);
+}
 
 // Command
 export const data = new SlashCommandBuilder()
@@ -92,13 +115,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  // Create select menu with FIXED custom ID (not timestamp-based)
-  // Format: role_select_{single|multi}_{roleIds}
-  const roleData = roles.map(r => r.id).join(',');
-  const customId = `role_select_${multiple ? 'multi' : 'single'}_${roleData}`;
+  // Generate a unique picker ID
+  const pickerId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
+  // Store picker config in Replit Database
+  const pickerConfig: PickerConfig = {
+    id: pickerId,
+    guildId: interaction.guild.id,
+    roleIds: roles.map(r => r.id),
+    multiple: multiple
+  };
+  
+  await savePicker(pickerConfig);
+
+  // Create select menu with SHORT custom ID
   const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId(customId)
+    .setCustomId(`picker_${pickerId}`)
     .setPlaceholder('Select role(s)')
     .setMinValues(multiple ? 0 : 1)
     .setMaxValues(multiple ? roles.length : 1)
@@ -143,19 +175,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 }
 
-// Interaction handler for role picker
+// ===== IMPORTANT: Add this function to your main bot file =====
+// Call this in your client's 'ready' event to register the persistent handler
 export function registerRolePickerHandler(client: any) {
   client.on('interactionCreate', async (interaction: StringSelectMenuInteraction) => {
     // Check if this is a role picker interaction
     if (!interaction.isStringSelectMenu()) return;
-    if (!interaction.customId.startsWith('role_select_')) return;
+    if (!interaction.customId.startsWith('picker_')) return;
 
     if (!interaction.guild || !interaction.member) return;
-
-    // Parse the custom ID to get role data
-    const parts = interaction.customId.split('_');
-    const mode = parts[2]; // 'single' or 'multi'
-    const roleIds = interaction.customId.slice('role_select_'.length + mode.length + 1).split(',');
 
     // CRITICAL: Defer within 3 seconds of the interaction
     try {
@@ -166,12 +194,30 @@ export function registerRolePickerHandler(client: any) {
     }
 
     try {
+      const pickerId = interaction.customId.replace('picker_', '');
+      const pickerConfig = await loadPicker(pickerId);
+
+      if (!pickerConfig) {
+        await interaction.editReply({
+          content: 'This role picker is no longer available.'
+        });
+        return;
+      }
+
+      // Verify this picker is for this guild
+      if (pickerConfig.guildId !== interaction.guild.id) {
+        await interaction.editReply({
+          content: 'This role picker cannot be used in this server.'
+        });
+        return;
+      }
+
       const member = await interaction.guild.members.fetch(interaction.user.id);
       const selectedRoleIds = interaction.values;
       const roles: Role[] = [];
 
       // Fetch all the roles
-      for (const roleId of roleIds) {
+      for (const roleId of pickerConfig.roleIds) {
         try {
           const role = await interaction.guild.roles.fetch(roleId);
           if (role) roles.push(role);
@@ -180,7 +226,7 @@ export function registerRolePickerHandler(client: any) {
         }
       }
 
-      if (mode === 'single') {
+      if (pickerConfig.multiple === false) {
         // Single selection mode: remove all picker roles, add selected one
         const rolesToRemove = roles.filter(r => 
           member.roles.cache.has(r.id) && !selectedRoleIds.includes(r.id)
@@ -202,7 +248,7 @@ export function registerRolePickerHandler(client: any) {
         if (shouldHave && !hasRole) {
           await member.roles.add(role);
           addedRoles.push(role.name);
-        } else if (!shouldHave && hasRole && mode === 'multi') {
+        } else if (!shouldHave && hasRole && pickerConfig.multiple) {
           // In multiple mode, deselecting removes the role
           await member.roles.remove(role);
           removedRoles.push(role.name);
