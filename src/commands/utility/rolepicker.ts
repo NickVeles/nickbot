@@ -9,10 +9,7 @@ import {
   MessageFlags,
   EmbedBuilder
 } from 'discord.js';
-import Database from '@replit/database';
-
-// Use Replit Database
-const db = new Database();
+import db from '../../database/index.js';
 
 interface PickerConfig {
   id: string;
@@ -22,21 +19,43 @@ interface PickerConfig {
 }
 
 // Load picker from database
-async function loadPicker(pickerId: string): Promise<PickerConfig | null> {
+function loadPicker(pickerId: string): PickerConfig | null {
   try {
-    const result = await db.get(`picker_${pickerId}`);
-    if (result && 'value' in result) {
-      return result.value as PickerConfig;
+    const stmt = db.prepare('SELECT * FROM pickers WHERE id = ?');
+    const result = stmt.get(pickerId) as any;
+    
+    if (result) {
+      return {
+        id: result.id,
+        guildId: result.guildId,
+        roleIds: JSON.parse(result.roleIds),
+        multiple: result.multiple === 1
+      };
     }
     return null;
   } catch (err) {
+    console.error('Error loading picker:', err);
     return null;
   }
 }
 
 // Save picker to database
-async function savePicker(pickerConfig: PickerConfig) {
-  await db.set(`picker_${pickerConfig.id}`, pickerConfig);
+function savePicker(pickerConfig: PickerConfig) {
+  try {
+    const stmt = db.prepare(`
+      INSERT OR REPLACE INTO pickers (id, guildId, roleIds, multiple)
+      VALUES (?, ?, ?, ?)
+    `);
+    
+    stmt.run(
+      pickerConfig.id,
+      pickerConfig.guildId,
+      JSON.stringify(pickerConfig.roleIds),
+      pickerConfig.multiple ? 1 : 0
+    );
+  } catch (err) {
+    console.error('Error saving picker:', err);
+  }
 }
 
 // Command
@@ -123,7 +142,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   // Generate a unique picker ID
   const pickerId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
-  // Store picker config in Replit Database
+  // Store picker config in database
   const pickerConfig: PickerConfig = {
     id: pickerId,
     guildId: interaction.guild.id,
@@ -131,9 +150,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     multiple: multiple
   };
   
-  await savePicker(pickerConfig);
+  savePicker(pickerConfig);
 
-  // Create select menu with SHORT custom ID
+  // Create select menu
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId(`picker_${pickerId}`)
     .setPlaceholder('Select role(s)')
@@ -141,7 +160,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     .setMaxValues(multiple ? roles.length : 1)
     .addOptions(
       roles.map(role => {
-        // Check if the first character is an emoji
         const emojiRegex = /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/u;
         const match = role.name.match(emojiRegex);
         
@@ -149,7 +167,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         let emoji = '🎭';
         
         if (match) {
-          // Extract the emoji and remove it from the label
           emoji = match[0];
           label = role.name.slice(match[0].length).trim();
         }
@@ -166,31 +183,26 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const row = new ActionRowBuilder<StringSelectMenuBuilder>()
     .addComponents(selectMenu);
 
-  // Create an embed for a nicer presentation
   const embed = new EmbedBuilder()
-    .setColor(0x5865F2) // Discord blurple color
+    .setColor(0x5865F2)
     .setTitle(text)
     .setFooter({ text: `${multiple ? 'Select multiple roles' : 'Select one role'} from the dropdown below` })
     .setTimestamp();
 
-  // Reply with the role picker (non-ephemeral so it stays in channel)
   await interaction.reply({
     embeds: [embed],
     components: [row]
   });
 }
 
-// ===== IMPORTANT: Add this function to your main bot file =====
-// Call this in your client's 'ready' event to register the persistent handler
+// Register the persistent handler
 export function registerRolePickerHandler(client: any) {
   client.on('interactionCreate', async (interaction: StringSelectMenuInteraction) => {
-    // Check if this is a role picker interaction
     if (!interaction.isStringSelectMenu()) return;
     if (!interaction.customId.startsWith('picker_')) return;
 
     if (!interaction.guild || !interaction.member) return;
 
-    // CRITICAL: Defer within 3 seconds of the interaction
     try {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     } catch (err) {
@@ -200,7 +212,7 @@ export function registerRolePickerHandler(client: any) {
 
     try {
       const pickerId = interaction.customId.replace('picker_', '');
-      const pickerConfig = await loadPicker(pickerId);
+      const pickerConfig = loadPicker(pickerId);
 
       if (!pickerConfig) {
         await interaction.editReply({
@@ -209,7 +221,6 @@ export function registerRolePickerHandler(client: any) {
         return;
       }
 
-      // Verify this picker is for this guild
       if (pickerConfig.guildId !== interaction.guild.id) {
         await interaction.editReply({
           content: 'This role picker cannot be used in this server.'
@@ -221,7 +232,6 @@ export function registerRolePickerHandler(client: any) {
       const selectedRoleIds = interaction.values;
       const roles: Role[] = [];
 
-      // Fetch all the roles
       for (const roleId of pickerConfig.roleIds) {
         try {
           const role = await interaction.guild.roles.fetch(roleId);
@@ -232,7 +242,6 @@ export function registerRolePickerHandler(client: any) {
       }
 
       if (pickerConfig.multiple === false) {
-        // Single selection mode: remove all picker roles, add selected one
         const rolesToRemove = roles.filter(r => 
           member.roles.cache.has(r.id) && !selectedRoleIds.includes(r.id)
         );
@@ -242,7 +251,6 @@ export function registerRolePickerHandler(client: any) {
         }
       }
 
-      // Add/remove selected roles
       const addedRoles: string[] = [];
       const removedRoles: string[] = [];
 
@@ -254,7 +262,6 @@ export function registerRolePickerHandler(client: any) {
           await member.roles.add(role);
           addedRoles.push(role.name);
         } else if (!shouldHave && hasRole && pickerConfig.multiple) {
-          // In multiple mode, deselecting removes the role
           await member.roles.remove(role);
           removedRoles.push(role.name);
         }
