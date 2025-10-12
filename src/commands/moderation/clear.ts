@@ -3,7 +3,7 @@ import {
   PermissionFlagsBits,
 } from "discord.js";
 
-import { execute as purgeExecute } from "./purge";
+import { execute as purgeExecute } from "./purge.js";
 
 // Command
 export const data = new SlashCommandBuilder()
