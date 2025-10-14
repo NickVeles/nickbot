@@ -21,6 +21,11 @@ import * as kick from "./moderation/kick.js";
 import * as _8ball from "./games/8ball.js";
 import * as roll from "./games/roll.js";
 
+import * as xp from "./leveling/xp.js";
+import * as levels from "./leveling/levels.js";
+import * as level from "./leveling/level.js";
+import * as leaderboard from "./leveling/leaderboard.js";
+
 export const commands: Record<string, Command> = {
   // Utility
   help,
@@ -44,4 +49,10 @@ export const commands: Record<string, Command> = {
   // Games
   "8ball": _8ball,
   roll,
+
+  // Leveling
+  xp,
+  levels,
+  level,
+  leaderboard,
 };
