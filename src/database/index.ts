@@ -35,6 +35,15 @@ function initializeTables() {
       PRIMARY KEY (userId, guildId)
     )
   `);
+
+  // Reddit posts table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS reddit_posts (
+      postUrl TEXT PRIMARY KEY,
+      subreddit TEXT NOT NULL,
+      postedAt INTEGER NOT NULL
+    )
+  `);
 }
 
 // Initialize tables on module load
